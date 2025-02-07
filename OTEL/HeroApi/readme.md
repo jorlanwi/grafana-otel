@@ -12,8 +12,8 @@ Voor debuggen kan `AddConsoleExporter()` worden gebruikt.
 
 # Custom Metrics
 Zie folder Metrics.
-Door Metrics toe te voegen kan hebben we meer inzicht in de applicatie
-
+Door Metrics toe te voegen kan hebben we meer inzicht in de applicatie.
+De metrics worden bijgewerkt door de controller actions in de HeroController.
  
 # Bronnen
 - [Built-in metrics in .NET](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/built-in-metrics)

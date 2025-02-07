@@ -49,7 +49,7 @@ services:
       - 5002:8088
     environment:
       - Otlp__Endpoint=http://otel-collector:4317
-      - ASPNETCORE_ENVIRONMENT=Development
+      # - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_Kestrel__Certificates__Default__Password=secret
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/heroapi.pfx
     volumes:
