@@ -1,0 +1,21 @@
+@HeroApi_HostAddress = https://localhost:7227/Hero
+
+GET {{HeroApi_HostAddress}}/
+Accept: application/json
+
+###
+
+GET {{HeroApi_HostAddress}}/1
+Accept: application/json
+
+###
+
+
+POST {{HeroApi_HostAddress}}/
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Jet",
+  "superPower":"philosophy"
+}
