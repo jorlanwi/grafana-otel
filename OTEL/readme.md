@@ -9,6 +9,7 @@ Zie: [Hosting ASP.NET Core images with Docker Compose over HTTPS](https://learn.
 Uitvoeren commando's:
 
 ```dotnet dev-certs https -ep %USERPROFILE%\.aspnet\https\heroapi.pfx -p secret```
+
 ```dotnet dev-certs https --trust```
 
 Na aanmaken certificaat heb ik het gekopieerd naar de https folder in de solution folder
