@@ -33,6 +33,7 @@ COPY --from=build-env /app/publish .
 
 # Starts on port 8080
 ENV ASPNETCORE_URLS=https://+:8088;http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Development
 
 # Set Entrypoint
 ENTRYPOINT ["./HeroApi"]

@@ -11,10 +11,9 @@ public class HeroMetrics
     private Counter<int> HeroUpdatedCounter { get; }
     private UpDownCounter<int> TotalHeroUpDownCounter { get; }
 
-    public HeroMetrics(IMeterFactory meterFactory, IConfiguration configuration)
+    public HeroMetrics(IMeterFactory meterFactory, HeroTelemetry heroTelemetry)
     {
-        var meter = meterFactory.Create(configuration["HeroApiMeterName"] ??
-                                       throw new NullReferenceException("Hero meter missing a name"));
+        var meter = meterFactory.Create(heroTelemetry.MeterName);
 
         HerosReadCounter = meter.CreateCounter<int>("heros-read", "Hero");
         HeroReadCounter = meter.CreateCounter<int>("hero-read", "Hero");

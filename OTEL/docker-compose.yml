@@ -5,28 +5,37 @@ networks:
     name: hero-network
     
 services:
-  # prometheus:
-  #   build: 
-  #     context: ./scripts/prometheus
-  #   depends_on:
-  #     - app
-  #   ports:
-  #     - 9090:9090
-  #   networks:
-  #     - metrics
+  prometheus:
+    build: 
+      context: ./scripts/prometheus
+    depends_on:
+      - otel-collector
+    ports:
+      - 9090:9090
+    networks:
+      - metrics
 
-  # grafana:
-  #   build: 
-  #     context: ./scripts/grafana
-  #   depends_on:
-  #     - prometheus
-  #   ports:
-  #     - 3000:3000
-  #   networks:
-  #     - metrics
-  
+  grafana:
+    build: 
+      context: ./scripts/grafana
+    depends_on:
+      - prometheus
+    ports:
+      - 3001:3000
+    networks:
+      - metrics
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "6831:6831/udp" # UDP port for Jaeger agent
+      - "16686:16686" # Web UI
+      - "14268:14268" # HTTP port for spans
+    networks:
+      - metrics
+
   otel-collector:
-    image: otel/opentelemetry-collector:0.89.0
+    image: otel/opentelemetry-collector:latest
     command: ["--config=/etc/otel-collector-config.yaml"]
     volumes:
       - ./scripts/otel-collector/otel-collector-config.yaml:/etc/otel-collector-config.yaml
@@ -34,7 +43,6 @@ services:
       - "8888:8888" 
       - "8889:8889" 
       - "13133:13133"
-      - "4317:4317"
     networks:
       - metrics
 
@@ -45,8 +53,8 @@ services:
     depends_on:
       - otel-collector
     ports:
-      - 5001:8080
-      - 5002:8088
+      - 5001:8080 # http
+      - 5002:8088 # https
     environment:
       - Otlp__Endpoint=http://otel-collector:4317
       # - ASPNETCORE_ENVIRONMENT=Development

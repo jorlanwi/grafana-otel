@@ -1,6 +1,7 @@
 using HeroApi.Metrics;
 using HeroApi.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace HeroApi.Controllers;
 [ApiController]
@@ -13,11 +14,13 @@ public class HeroController : ControllerBase
     };
 
     private readonly ILogger<HeroController> _logger;
+    private readonly HeroTelemetry _heroTelemetry;
     private readonly HeroMetrics _meters;
 
-    public HeroController(ILogger<HeroController> logger, HeroMetrics meters)
+    public HeroController(ILogger<HeroController> logger, HeroTelemetry heroTelemetry, HeroMetrics meters)
     {
         _logger = logger;
+        _heroTelemetry = heroTelemetry;
         _meters = meters;
     }
 
@@ -43,44 +46,68 @@ public class HeroController : ControllerBase
     [HttpPost()]
     public IActionResult Post(PostHeroViewModel heroVM)
     {
-        var hero = new HeroViewModel
+        using (var activity = _heroTelemetry.ActivitySource.StartActivity("Create new hero"))
         {
-            Id = _heros.Max(e => e.Id),
-            Name = heroVM.Name,
-            SuperPower = heroVM.SuperPower
-        };
+            var id = _heros.Count() > 0 ? _heros.Max(e => e.Id) + 1 : 1;
+            var hero = new HeroViewModel
+            {
+                Id = id,
+                Name = heroVM.Name,
+                SuperPower = heroVM.SuperPower
+            };
 
-        _heros.Add(hero);
-        _meters.AddHero();
-        return Created(hero.Id.ToString(), heroVM);
+            _heros.Add(hero);
+            _meters.AddHero();
+
+            activity.AddTag("hero.id", hero.Id);
+            activity.AddTag("hero.name", hero.Name);
+            activity.AddTag("hero.superPower", hero.SuperPower);
+
+            return Created(hero.Id.ToString(), hero);
+        }
     }
 
     [HttpPut("{id}")]
     public IActionResult Put(int id, PostHeroViewModel heroVM)
     {
-        var hero = _heros.FirstOrDefault(e => e.Id == id);
-        if (hero is null)
+        using (var activity = _heroTelemetry.ActivitySource.StartActivity("Changing hero"))
         {
-            return NotFound();
+            var hero = _heros.FirstOrDefault(e => e.Id == id);
+            if (hero is null)
+            {
+                return NotFound();
+            }
+
+            hero.Name = heroVM.Name;
+            hero.SuperPower = heroVM.SuperPower;
+
+            _meters.UpdateHero();
+            activity.AddTag("hero.id", hero.Id);
+            activity.AddTag("hero.name", hero.Name);
+            activity.AddTag("hero.superPower", hero.SuperPower);
+
+            return Ok(hero);
         }
-
-        hero.Name = heroVM.Name;
-        hero.SuperPower = heroVM.SuperPower;
-
-        _meters.UpdateHero();
-        return Ok(hero);
     }
 
     [HttpDelete("{id}")]
     public IActionResult Delete(int id)
     {
-        int index = _heros.FindIndex(e => e.Id == id);
-        if (index >= 0)
+        using (var activity = _heroTelemetry.ActivitySource.StartActivity("Killing hero"))
         {
-            _heros.RemoveAt(index);
-        }
+            int index = _heros.FindIndex(e => e.Id == id);
+            if (index >= 0)
+            {
+                _heros.RemoveAt(index);
+                _meters.DeleteHero();
+                activity.AddTag("hero.id", id);
+            }
+            else {
+                activity.AddTag("error.message", "hero not found");
+                activity.SetStatus(ActivityStatusCode.Error);
+            }
 
-        _meters.DeleteHero();
-        return Ok();
+            return Ok();
+        }
     }
 }
